@@ -1,0 +1,11 @@
+{
+  "name": "tirta-senja-booking",
+  "version": "1.0.0",
+  "description": "Demo website pemesanan hotel (front-end murni) untuk portofolio.",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "node --test tests/booking.test.js"
+  },
+  "license": "MIT"
+}
