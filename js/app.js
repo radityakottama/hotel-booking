@@ -7,7 +7,9 @@
  *   data.js -> booking.js -> storage.js -> ui.js -> app.js
  */
 
-(() => {
+(async () => {
+  await window.partialsReady; // tunggu header (dan partial lain nanti) selesai dimuat sebelum mencari elemen apa pun
+
   const $ = (selector) => document.querySelector(selector);
   const dialog = $("#dlg");
   const dialogBody = $("#dgc");
