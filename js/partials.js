@@ -9,3 +9,9 @@ async function loadPartials(selector, url) {
 window.partialsReady = Promise.all([
   loadPartials("#header-placeholder", "partials/header.html"),
 ]);
+
+window.partialsReady.then(() => {
+  document.querySelector("#menuBtn").addEventListener("click", () => {
+    document.querySelector("#nav").classList.toggle("open");
+  });
+});
