@@ -62,6 +62,23 @@ const UI = (() => {
     </article>`;
   }
 
+  /** Kartu konten generik (judul + deskripsi + 1 gambar).
+   *  Dipakai untuk halaman kategori seperti Dining, Spa, Experience —
+   *  formatnya sama, konten (data) yang beda-beda per halaman.
+   *  `index` menentukan apakah kartu ini "big" (kartu pertama, langsung
+   *  terlihat sehingga tidak di-lazy-load) atau kartu biasa. */
+  function contentCard(item, index) {
+    const sizeClass = item.big ? "big" : "";
+    const lazyAttr = index === 0 ? "" : ' loading="lazy"';
+    return `<article class="card reveal ${sizeClass}">
+      <img src="${item.image}" alt="${escapeHtml(item.title)}"${lazyAttr}>
+      <div class="cb">
+        <h3>${escapeHtml(item.title)}</h3>
+        <p>${escapeHtml(item.desc)}</p>
+      </div>
+    </article>`;
+  }
+
   function emptyState(message) {
     return `<div class="empty">${message}</div>`;
   }
@@ -116,5 +133,5 @@ const UI = (() => {
     return `<h2>Pesanan saya</h2>${body}<button class="btn sec" id="btn-close">Tutup</button>`;
   }
 
-  return { rupiah, formatDate, escapeHtml, filterChips, roomCard, emptyState, bookingForm, confirmation, myBookings };
+  return { rupiah, formatDate, escapeHtml, filterChips, roomCard, contentCard, emptyState, bookingForm, confirmation, myBookings };
 })();
