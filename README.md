@@ -89,6 +89,7 @@ klik "Pesan" → Booking.priceBreakdown → UI.bookingForm
 - Backend sederhana (Node/Express atau Laravel) untuk menyimpan pesanan dan ketersediaan nyata.
 - Pembayaran sandbox, misalnya Midtrans.
 - Tes antarmuka otomatis dengan Playwright.
+- Sistem multi-tema (bukan cuma multi-konten) kalau situs ini dipakai untuk beberapa hotel dengan layout/struktur halaman yang benar-benar berbeda (bukan cuma warna/konten beda), mirip pola tema WordPress atau page builder.
 
 ## Lisensi
 

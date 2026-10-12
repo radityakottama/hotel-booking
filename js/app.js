@@ -9,7 +9,8 @@
 
 (async () => {
   await window.partialsReady; // tunggu header (dan partial lain nanti) selesai dimuat sebelum mencari elemen apa pun
-
+  
+  const ROOMS = await fetch("http://localhost:3000/api/rooms").then((r) => r.json());
   const $ = (selector) => document.querySelector(selector);
   const dialog = $("#dlg");
   const dialogBody = $("#dgc");
