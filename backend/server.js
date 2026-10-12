@@ -4,7 +4,7 @@ const app = express();
 const PORT = 3000;
 
 const ROOMS = require("./data/rooms.js");
-const Booking = require("./js/booking.js");
+const Booking = require("../js/booking.js");
 
 app.use(cors());
 app.use(express.json());

@@ -2,7 +2,7 @@
 
 Demo website pemesanan hotel berbahasa Indonesia untuk **hotel fiktif** di Ubud, Bali. Dibuat murni dengan HTML, CSS, dan JavaScript (tanpa framework) sebagai proyek portofolio front-end.
 
-> Ini proyek demo. Tidak ada backend, pembayaran, atau pemesanan nyata.
+> Ini proyek demo untuk belajar. Belum ada pembayaran sungguhan, tapi sekarang sudah punya backend (Node.js + Express) yang memvalidasi pesanan — lihat folder `backend/`.
 
 ## Fitur
 
@@ -17,16 +17,25 @@ Demo website pemesanan hotel berbahasa Indonesia untuk **hotel fiktif** di Ubud,
 
 ## Menjalankan
 
-Cara paling cepat: buka `index.html` langsung di browser.
+Proyek ini sekarang punya dua bagian yang jalan terpisah: **frontend** (statis, root folder) dan **backend** (API, folder `backend/`).
 
-Atau lewat server lokal (butuh Python 3):
+**Frontend** — cara paling cepat: buka `index.html` langsung di browser. Atau lewat server lokal (butuh Python 3):
 
 ```bash
 npm start
 # buka http://localhost:8080
 ```
 
-Menjalankan pengujian (butuh Node.js 18+):
+**Backend** (perlu jalan bersamaan supaya pencarian/pemesanan kamar berfungsi):
+
+```bash
+cd backend
+npm install   # sekali saja, pertama kali
+npm run dev
+# API jalan di http://localhost:3000
+```
+
+Menjalankan pengujian frontend (butuh Node.js 18+):
 
 ```bash
 npm test
@@ -40,13 +49,18 @@ tirta-senja-booking/
 ├── css/
 │   └── styles.css        Semua gaya (tema, tata letak, komponen, responsif)
 ├── js/
-│   ├── data.js           Data kamar dan konstanta (tarif, batas, dll.)
+│   ├── data.js           Konstanta aplikasi (tarif, batas, dll.) -- data kamar sudah pindah ke backend
 │   ├── booking.js        Logika murni: hitung malam, harga, validasi, kode pesanan
+│   │                     (dipakai dua arah: browser DAN backend/server.js)
 │   ├── storage.js        Simpan dan baca riwayat pesanan (localStorage)
 │   ├── ui.js             Fungsi pembuat HTML (kartu kamar, form, konfirmasi)
-│   └── app.js            State, event listener, dan penghubung semuanya
-└── tests/
-    └── booking.test.js   Uji unit untuk logika di booking.js
+│   └── app.js            State, event listener, ambil data lewat fetch() ke backend
+├── tests/
+│   └── booking.test.js   Uji unit untuk logika di booking.js
+└── backend/               Server API (Node.js + Express), lihat package.json sendiri di sini
+    ├── server.js          Route GET /api/rooms dan POST /api/bookings
+    └── data/
+        └── rooms.js        Data kamar sungguhan (sumber kebenaran, bukan lagi js/data.js)
 ```
 
 ## Cara membaca kodenya
