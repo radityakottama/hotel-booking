@@ -40,7 +40,9 @@ button, input, select { font: inherit; color: inherit; }
 /* min-height mencegah layout shift: ruang ini sudah dicadangkan sebelum
    header hasil fetch() partial benar-benar muncul mengisi placeholder-nya. */
 #header-placeholder { min-height: 75px; }
+#page-title { margin: 12px 0; }
 header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; }
+#nav { display: flex; align-items: center; gap: 16px; }
 .logo { font: 800 20px "Bricolage Grotesque", sans-serif; }
 .logo small { display: block; font: 500 12px "DM Sans"; color: var(--mut); }
 .hbtn { background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
