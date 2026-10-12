@@ -3,25 +3,48 @@ const cors = require("cors");
 const app = express();
 const PORT = 3000;
 
+const ROOMS = require("./data/rooms.js");
+const Booking = require("./js/booking.js");
+
 app.use(cors());
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Halo dari dapur!");
 });
 
 app.get("/api/rooms", (req, res) => {
-  res.json([
-    { id: 1, name: "Kamar Taman", type: "Standar", cap: 2, bed: "1 King", size: 28, price: 850000, left: 4,
-      perks: ["AC", "Wi-Fi", "Teras"], hills: "#7fb98b", valley: "#3d7a5a" },
-    { id: 2, name: "Kamar Sawah", type: "Deluxe", cap: 3, bed: "1 King + sofa bed", size: 36, price: 1250000, left: 3,
-      perks: ["AC", "Wi-Fi", "Balkon", "Sarapan"], hills: "#c9d96b", valley: "#4f8a3c" },
-    { id: 3, name: "Suite Sungai", type: "Suite", cap: 3, bed: "1 King", size: 48, price: 1950000, left: 2,
-      perks: ["AC", "Wi-Fi", "Bathtub", "Sarapan"], hills: "#8fd0cc", valley: "#1f7a74" },
-    { id: 4, name: "Villa Kolam Pribadi", type: "Villa", cap: 4, bed: "2 Queen", size: 85, price: 3400000, left: 1,
-      perks: ["Kolam", "Dapur", "Wi-Fi", "Sarapan"], hills: "#f0c36d", valley: "#c26a2f" },
-    { id: 5, name: "Bungalow Keluarga", type: "Villa", cap: 5, bed: "1 King + 2 Single", size: 70, price: 2650000, left: 3,
-      perks: ["AC", "Wi-Fi", "Dapur kecil"], hills: "#a7c8e8", valley: "#3b6ea5" },
-  ]);
+  res.json(ROOMS);
+});
+
+app.post("/api/bookings", (req, res) => {
+  const { roomId, checkIn, checkOut, roomCount, guest } = req.body;
+
+  const room = ROOMS.find((r) => r.id === roomId);
+  if (!room) return res.status(404).json({ error: "Kamar tidak ditemukan." });
+
+  const today = Booking.toLocalISO(new Date());
+  const dateError = Booking.validateDates(checkIn, checkOut, today);
+  if (dateError) return res.status(400).json({ error: dateError });
+
+  if (!Booking.canBook(room, guest.adults, roomCount)) {
+    return res.status(400).json({ error: "Kamar tidak muat atau stok tidak cukup." });
+  }
+
+  const guestError = Booking.validateGuest(guest);
+  if (guestError) return res.status(400).json({ error: guestError });
+
+  const nights = Booking.nightsBetween(checkIn, checkOut);
+  const price = Booking.priceBreakdown(room.price, nights, roomCount, { service: 0.10, tax: 0.11 });
+
+  res.json({
+    code: Booking.generateCode("TS"),
+    room: room.name,
+    checkIn, checkOut, nights,
+    rooms: roomCount,
+    name: guest.name.trim(),
+    total: price.total,
+  });
 });
 
 app.listen(PORT, () => {
