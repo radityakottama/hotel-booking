@@ -9,7 +9,7 @@
 
 (async () => {
   await window.partialsReady; // tunggu header (dan partial lain nanti) selesai dimuat sebelum mencari elemen apa pun
-  
+
   const ROOMS = await fetch("http://localhost:3000/api/rooms").then((r) => r.json());
   const $ = (selector) => document.querySelector(selector);
   const dialog = $("#dlg");
@@ -78,32 +78,36 @@
     $("#btn-confirm").onclick = () => confirmBooking(room, nights, price);
   }
 
-  function confirmBooking(room, nights, price) {
-    const guest = {
-      name: $("#guest-name").value,
-      email: $("#guest-email").value,
-      phone: $("#guest-phone").value,
-    };
-    const error = Booking.validateGuest(guest);
-    if (error) {
-      $("#form-error").textContent = error;
-      return;
-    }
+  async function confirmBooking(room, nights, price) {
+  const guest = {
+    name: $("#guest-name").value,
+    email: $("#guest-email").value,
+    phone: $("#guest-phone").value,
+    adults: state.adults,
+  };
 
-    const booking = {
-      code: Booking.generateCode(CONFIG.CODE_PREFIX),
-      room: room.name,
+  const response = await fetch("http://localhost:3000/api/bookings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      roomId: room.id,
       checkIn: state.checkIn,
       checkOut: state.checkOut,
-      nights,
-      rooms: state.rooms,
-      name: guest.name.trim(),
-      total: price.total,
-    };
-    BookingStore.add(booking);
-    showDialog(UI.confirmation(booking));
-    $("#btn-close").onclick = () => dialog.close();
+      roomCount: state.rooms,
+      guest,
+    }),
+  });
+  const result = await response.json();
+
+  if (!response.ok) {
+    $("#form-error").textContent = result.error;
+    return;
   }
+
+  BookingStore.add(result);
+  showDialog(UI.confirmation(result));
+  $("#btn-close").onclick = () => dialog.close();
+}
 
   // ---------- Event listeners ----------
 
