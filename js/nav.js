@@ -9,11 +9,15 @@
  * sama seperti listener #menuBtn di partials.js.
  */
 window.partialsReady.then(() => {
-  const links = Object.entries(CATEGORIES)
+  const categoryLinks = Object.entries(CATEGORIES)
     .map(([slug, category]) => `<a href="category.html?slug=${slug}" class="navlink">${category.title}</a>`)
     .join("");
+  // "Virtual Tour" bukan kategori konten (tidak ada di CATEGORIES), jadi
+  // ditulis statis di sini -- tapi tetap lewat nav.js supaya satu sumber
+  // untuk seluruh isi menu, bukan ditulis terpisah di partials/header.html.
+  const tourLink = `<a href="tour.html" class="navlink">Virtual Tour</a>`;
   // Disisipkan langsung sebagai anak <nav> (sejajar tombol "Pesanan saya"),
   // bukan dibungkus elemen lain, supaya "gap" di CSS #nav berlaku ke
   // setiap link secara individual.
-  document.querySelector("#myBk").insertAdjacentHTML("beforebegin", links);
+  document.querySelector("#myBk").insertAdjacentHTML("beforebegin", categoryLinks + tourLink);
 });
