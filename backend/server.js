@@ -40,6 +40,14 @@ app.post("/api/rooms", (req, res) => {
   res.status(201).json(room);
 });
 
+app.patch("/api/rooms/:id", (req, res) => {
+  const room = Room.findById(req.params.id);
+  if (!room) return res.status(404).json({ error: "Kamar tidak ditemukan." });
+
+  const updated = Room.update(req.params.id, req.body);
+  res.json(updated);
+});
+
 app.delete("/api/rooms/:id", (req, res) => {
   const deleted = Room.remove(req.params.id);
   if (!deleted) return res.status(404).json({ error: "Kamar tidak ditemukan." });
@@ -87,6 +95,16 @@ app.post("/api/bookings", (req, res) => {
     name: guest.name.trim(),
     total: price.total,
   });
+});
+
+// Error-handling middleware -- Express mengenalinya KHUSUS karena punya 4
+// parameter (err, req, res, next), harus ditulis TERAKHIR (setelah semua
+// route). Kalau ada error yang tidak sengaja lolos dari penanganan di route
+// manapun (misalnya body kosong/salah format), ini jadi jaring pengaman
+// terakhir -- server tetap hidup, cuma request itu yang gagal dengan rapi.
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: "Terjadi kesalahan di server." });
 });
 
 app.listen(PORT, () => {

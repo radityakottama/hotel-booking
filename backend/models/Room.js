@@ -37,6 +37,28 @@ function create(room) {
   return findById(result.lastInsertRowid);
 }
 
+// Daftar kolom yang BOLEH diubah lewat update() -- nama kolom tidak bisa
+// diamankan pakai parameter (@nama) seperti nilai biasa, jadi dibatasi di
+// sini supaya tidak ada nama kolom "liar" yang ikut ditempel ke query.
+const EDITABLE_FIELDS = ["name", "type", "cap", "bed", "size", "price", "available", "perks", "hills", "valley"];
+
+/** Ubah SEBAGIAN data kamar -- cuma field yang ada di objek "changes" yang
+ *  diubah, field lain yang tidak dikirim TETAP seperti semula. Field di
+ *  luar EDITABLE_FIELDS diabaikan (bukan error, cuma dilewati saja). */
+function update(id, changes) {
+  const fields = Object.keys(changes).filter((f) => EDITABLE_FIELDS.includes(f));
+  if (fields.length === 0) return findById(id);
+
+  const setClause = fields.map((f) => `${f} = @${f}`).join(", ");
+  const params = { id };
+  fields.forEach((f) => {
+    params[f] = f === "perks" ? JSON.stringify(changes[f]) : changes[f];
+  });
+
+  db.prepare(`UPDATE rooms SET ${setClause} WHERE id = @id`).run(params);
+  return findById(id);
+}
+
 /** Hapus kamar berdasarkan id. Mengembalikan true kalau ada baris yang
  *  terhapus, false kalau id-nya memang tidak ada dari awal. */
 function remove(id) {
@@ -44,4 +66,4 @@ function remove(id) {
   return result.changes > 0;
 }
 
-module.exports = { findAll, findById, decreaseStock, create, remove };
+module.exports = { findAll, findById, decreaseStock, create, update, remove };
