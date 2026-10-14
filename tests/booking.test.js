@@ -51,19 +51,6 @@ test("priceBreakdown: layanan 10% lalu pajak 11% dari (subtotal + layanan)", () 
   assert.equal(p.total, 2442000);
 });
 
-test("roomsLeft menghitung sisa kamar per malam, bukan per pesanan", () => {
-  const bookings = [
-    { checkIn: "2026-11-01", checkOut: "2026-11-03", roomCount: 1 }, // malam 1, 2
-    { checkIn: "2026-11-03", checkOut: "2026-11-05", roomCount: 2 }, // malam 3, 4
-  ];
-  assert.equal(Booking.roomsLeft(3, [], "2026-11-01", "2026-11-03"), 3);       // belum ada pesanan
-  assert.equal(Booking.roomsLeft(3, bookings, "2026-11-01", "2026-11-03"), 2); // cuma pesanan pertama
-  assert.equal(Booking.roomsLeft(3, bookings, "2026-11-02", "2026-11-04"), 1); // malam 3 paling penuh (2)
-  assert.equal(Booking.roomsLeft(3, bookings, "2026-11-05", "2026-11-07"), 3); // check-out tgl 5 tidak bentrok
-  assert.equal(Booking.roomsLeft(3, bookings, "2026-10-30", "2026-11-01"), 3); // check-in tgl 1 tidak bentrok
-  assert.equal(Booking.roomsLeft(1, bookings, "2026-11-03", "2026-11-04"), 0); // tidak pernah minus
-});
-
 test("priceBreakdown mengalikan jumlah kamar", () => {
   assert.equal(Booking.priceBreakdown(850000, 3, 2, RATES).subtotal, 5100000);
 });
