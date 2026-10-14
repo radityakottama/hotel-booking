@@ -8,7 +8,8 @@ Demo website pemesanan hotel berbahasa Indonesia untuk **hotel fiktif** di Ubud,
 
 - Pencarian berdasarkan tanggal check-in/check-out, jumlah tamu, dan jumlah kamar, lengkap dengan validasi tanggal.
 - Lima tipe kamar, dengan filter tipe dan urutan (harga terendah, harga tertinggi, kapasitas).
-- Kamar yang tidak muat untuk jumlah tamu, atau stoknya kurang, otomatis dinonaktifkan.
+- Ketersediaan per tanggal: sisa kamar dihitung dari pesanan yang tanggalnya bentrok, jadi kamar yang penuh di satu tanggal tetap bisa dipesan di tanggal lain.
+- Kamar yang tidak muat untuk jumlah tamu, atau sudah penuh di tanggal itu, otomatis dinonaktifkan.
 - Form pemesanan dengan validasi nama, email, dan nomor HP.
 - Rincian harga: harga kamar × malam × jumlah kamar, biaya layanan 10%, pajak 11%.
 - Kode pesanan otomatis dan halaman "Pesanan saya" (riwayat disimpan di browser lewat `localStorage`).
@@ -99,7 +100,7 @@ klik "Pesan" → Booking.priceBreakdown → UI.bookingForm
 ## Ide pengembangan
 
 - Halaman detail kamar dengan galeri foto.
-- Kalender ketersediaan per tanggal (saat ini stok masih statis).
+- Kalender visual ketersediaan per tanggal (sisa kamar sudah dihitung per tanggal, tapi belum ditampilkan sebagai kalender).
 - Backend sederhana (Node/Express atau Laravel) untuk menyimpan pesanan dan ketersediaan nyata.
 - Pembayaran sandbox, misalnya Midtrans.
 - Tes antarmuka otomatis dengan Playwright.

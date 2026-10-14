@@ -10,7 +10,6 @@
 (async () => {
   await window.partialsReady; // tunggu header (dan partial lain nanti) selesai dimuat sebelum mencari elemen apa pun
 
-  const ROOMS = await fetch("http://localhost:3000/api/rooms").then((r) => r.json());
   const $ = (selector) => document.querySelector(selector);
   const dialog = $("#dlg");
   const dialogBody = $("#dgc");
@@ -27,6 +26,16 @@
     adults: 2,
     rooms: 1,
   };
+
+  // Data kamar dari server. "left" di tiap kamar = sisa kamar untuk
+  // tanggal state.checkIn-checkOut, jadi harus diambil ulang setiap kali
+  // tanggal berubah (dan setelah memesan, karena sisanya berkurang).
+  let ROOMS = [];
+
+  async function loadRooms() {
+    const params = new URLSearchParams({ checkIn: state.checkIn, checkOut: state.checkOut });
+    ROOMS = await fetch(`http://localhost:3000/api/rooms?${params}`).then((r) => r.json());
+  }
 
   // ---------- Render ----------
 
@@ -107,6 +116,9 @@
   BookingStore.add(result);
   showDialog(UI.confirmation(result));
   $("#btn-close").onclick = () => dialog.close();
+
+  await loadRooms(); // sisa kamar di tanggal ini baru saja berkurang
+  renderRooms();
 }
 
   // ---------- Event listeners ----------
@@ -124,7 +136,7 @@
     renderRooms();
   });
 
-  $("#go").addEventListener("click", () => {
+  $("#go").addEventListener("click", async () => {
     const checkIn = $("#ci").value;
     const checkOut = $("#co").value;
     const error = Booking.validateDates(checkIn, checkOut, today);
@@ -135,6 +147,7 @@
     state.checkOut = checkOut;
     state.adults = Number($("#ad").value);
     state.rooms = Number($("#rm").value);
+    await loadRooms();
     renderRooms();
     $("#grid").scrollIntoView({ behavior: "smooth" });
   });
@@ -159,6 +172,7 @@
     `<option ${i + 1 === state.adults ? "selected" : ""}>${i + 1}</option>`).join("");
   $("#rm").innerHTML = Array.from({ length: CONFIG.MAX_ROOMS }, (_, i) => `<option>${i + 1}</option>`).join("");
 
+  await loadRooms();
   renderChips();
   renderRooms();
 })();
