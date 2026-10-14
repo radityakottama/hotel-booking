@@ -14,4 +14,17 @@ function create(booking) {
   `).run({ ...booking, createdAt: new Date().toISOString() });
 }
 
-module.exports = { create };
+/** Pesanan untuk kamar `roomId` yang rentangnya BENTROK dengan
+ *  [checkIn, checkOut). Dua rentang bentrok kalau masing-masing mulai
+ *  sebelum yang lain selesai -- tanggal "YYYY-MM-DD" bisa dibandingkan
+ *  langsung sebagai teks, jadi cukup pakai < di SQL.
+ *  Kolom diberi alias supaya bentuknya cocok dengan Booking.roomsLeft. */
+function findOverlapping(roomId, checkIn, checkOut) {
+  return db.prepare(`
+    SELECT check_in AS checkIn, check_out AS checkOut, room_count AS roomCount
+    FROM bookings
+    WHERE room_id = ? AND check_in < ? AND ? < check_out
+  `).all(roomId, checkOut, checkIn);
+}
+
+module.exports = { create, findOverlapping };

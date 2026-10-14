@@ -41,6 +41,32 @@ const Booking = (() => {
     return room.cap * roomCount >= guests && room.left >= roomCount;
   }
 
+  /** Sisa kamar untuk rentang tanggal tertentu.
+   *  `total` = jumlah unit kamar tipe ini, `bookings` = pesanan lain untuk
+   *  kamar yang sama ({ checkIn, checkOut, roomCount }).
+   *
+   *  Dihitung PER MALAM: untuk tiap malam di rentang [checkIn, checkOut),
+   *  jumlahkan kamar yang sedang terpakai, lalu ambil malam yang paling
+   *  penuh. Kenapa tidak sekadar menjumlahkan semua pesanan yang bentrok?
+   *  Karena dua pesanan bisa sama-sama bentrok dengan rentang kita tapi
+   *  tidak di malam yang sama (misal satu tanggal 1-2, satu tanggal 3-4),
+   *  jadi menjumlahkan semuanya akan membuat kamar tampak lebih penuh
+   *  dari kenyataannya.
+   *
+   *  Malam check-out TIDAK dihitung: tamu yang check-out tanggal 5 dan
+   *  tamu yang check-in tanggal 5 tidak berebut kamar. */
+  function roomsLeft(total, bookings, checkIn, checkOut) {
+    let busiest = 0;
+    for (let t = Date.parse(`${checkIn}T00:00:00Z`); t < Date.parse(`${checkOut}T00:00:00Z`); t += DAY_MS) {
+      const night = new Date(t).toISOString().slice(0, 10); // aman: t sudah UTC
+      const used = bookings
+        .filter((b) => b.checkIn <= night && night < b.checkOut)
+        .reduce((sum, b) => sum + b.roomCount, 0);
+      busiest = Math.max(busiest, used);
+    }
+    return Math.max(0, total - busiest);
+  }
+
   /** Rincian harga. Biaya layanan dihitung dari subtotal,
    *  pajak dihitung dari (subtotal + biaya layanan). Semua dibulatkan ke Rupiah. */
   function priceBreakdown(pricePerNight, nights, roomCount, rates) {
@@ -63,7 +89,7 @@ const Booking = (() => {
     return `${prefix}-${rand().toString(36).slice(2, 8).toUpperCase()}`;
   }
 
-  return { toLocalISO, nightsBetween, validateDates, canBook, priceBreakdown, validateGuest, generateCode };
+  return { toLocalISO, nightsBetween, validateDates, canBook, roomsLeft, priceBreakdown, validateGuest, generateCode };
 })();
 
 // Agar file ini bisa diuji di Node.js tanpa mengubah cara kerjanya di browser.

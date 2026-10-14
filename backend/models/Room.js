@@ -8,7 +8,11 @@ const db = require("../db.js");
 
 /** Ubah baris database (kolom "available", perks berupa teks) jadi bentuk
  *  yang dipahami kode lama (booking.js, ui.js) yang pakai nama "left" dan
- *  perks sebagai array -- supaya kode itu TIDAK perlu diubah sama sekali. */
+ *  perks sebagai array -- supaya kode itu TIDAK perlu diubah sama sekali.
+ *
+ *  Catatan: kolom "available" sekarang berarti JUMLAH UNIT kamar tipe ini
+ *  (tetap, tidak berkurang saat dipesan). Sisa kamar untuk tanggal
+ *  tertentu dihitung terpisah di server.js lewat Booking.roomsLeft. */
 function toRoom(row) {
   return { ...row, left: row.available, perks: JSON.parse(row.perks) };
 }
@@ -20,10 +24,6 @@ function findAll() {
 function findById(id) {
   const row = db.prepare("SELECT * FROM rooms WHERE id = ?").get(id);
   return row ? toRoom(row) : null;
-}
-
-function decreaseStock(id, count) {
-  db.prepare("UPDATE rooms SET available = available - ? WHERE id = ?").run(count, id);
 }
 
 /** Tambah kamar baru. "id" TIDAK diisi manual -- SQLite otomatis kasih
@@ -66,4 +66,4 @@ function remove(id) {
   return result.changes > 0;
 }
 
-module.exports = { findAll, findById, decreaseStock, create, update, remove };
+module.exports = { findAll, findById, create, update, remove };
