@@ -37,4 +37,11 @@ function create(room) {
   return findById(result.lastInsertRowid);
 }
 
-module.exports = { findAll, findById, decreaseStock, create };
+/** Hapus kamar berdasarkan id. Mengembalikan true kalau ada baris yang
+ *  terhapus, false kalau id-nya memang tidak ada dari awal. */
+function remove(id) {
+  const result = db.prepare("DELETE FROM rooms WHERE id = ?").run(id);
+  return result.changes > 0;
+}
+
+module.exports = { findAll, findById, decreaseStock, create, remove };

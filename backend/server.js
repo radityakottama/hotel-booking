@@ -40,6 +40,12 @@ app.post("/api/rooms", (req, res) => {
   res.status(201).json(room);
 });
 
+app.delete("/api/rooms/:id", (req, res) => {
+  const deleted = Room.remove(req.params.id);
+  if (!deleted) return res.status(404).json({ error: "Kamar tidak ditemukan." });
+  res.status(204).send();
+});
+
 app.post("/api/bookings", (req, res) => {
   const { roomId, checkIn, checkOut, roomCount, guest } = req.body;
 
