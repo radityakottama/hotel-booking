@@ -22,8 +22,12 @@ app.get("/api/rooms", (req, res) => {
 app.post("/api/rooms", (req, res) => {
   const { name, type, cap, bed, size, price, available, perks, hills, valley } = req.body;
 
-  if (!name || !price) {
-    return res.status(400).json({ error: "Nama dan harga kamar wajib diisi." });
+  // Semua kolom ini NOT NULL di database (lihat db.js) -- kalau salah satu
+  // kosong, INSERT akan gagal dengan error SQLite mentah yang membocorkan
+  // detail internal server. Divalidasi dulu di sini supaya gagalnya rapi
+  // (400 + pesan jelas), bukan crash (500).
+  if (!name || !type || !cap || !bed || !size || !price || available == null) {
+    return res.status(400).json({ error: "Nama, tipe, kapasitas, tempat tidur, luas, harga, dan stok kamar wajib diisi." });
   }
 
   const room = Room.create({
