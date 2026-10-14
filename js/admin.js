@@ -21,7 +21,7 @@ async function loadRooms() {
       <div class="admin-row">
         <div>
           <strong>${UI.escapeHtml(room.name)}</strong> — ${UI.escapeHtml(room.type)},
-          ${room.cap} tamu, ${UI.rupiah(room.price)}/malam, stok: ${room.left}
+          ${room.cap} tamu, ${UI.rupiah(room.price)}/malam, ${room.left} unit
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="btn sec" data-edit="${room.id}">Edit</button>
