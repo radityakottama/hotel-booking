@@ -9,4 +9,6 @@ module.exports = [
     perks: ["Kolam", "Dapur", "Wi-Fi", "Sarapan"], hills: "#f0c36d", valley: "#c26a2f" },
   { id: 5, name: "Bungalow Keluarga", type: "Villa", cap: 5, bed: "1 King + 2 Single", size: 70, price: 2650000, left: 3,
     perks: ["AC", "Wi-Fi", "Dapur kecil"], hills: "#a7c8e8", valley: "#3b6ea5" },
+  { id: 6, name: "Villa Keluarga", type: "Villa", cap: 5, bed: "2 King + 2 Single", size: 90, price: 3650000, left: 1,
+    perks: ["AC", "Wi-Fi", "Dapur kecil"], hills: "#a7c8e8", valley: "#3b6ea5" },
 ];
