@@ -33,7 +33,7 @@ function initCategoryPanel(slug, panelEl) {
   let editingId = null;
 
   async function load() {
-    const category = await fetch(API).then((r) => r.json());
+    const category = await authFetch(API).then((r) => r.json());
     heading.textContent = category.title;
     titleInput.value = category.title;
 
@@ -77,7 +77,7 @@ function initCategoryPanel(slug, panelEl) {
 
   titleForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    await fetch(API, {
+    await authFetch(API, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: titleInput.value }),
@@ -101,7 +101,7 @@ function initCategoryPanel(slug, panelEl) {
     const url = editingId ? `${API_CATEGORIES}/items/${editingId}` : `${API}/items`;
     const method = editingId ? "PATCH" : "POST";
 
-    const response = await fetch(url, {
+    const response = await authFetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -123,7 +123,7 @@ function initCategoryPanel(slug, panelEl) {
   list.addEventListener("click", async (e) => {
     const editButton = e.target.closest("[data-edit]");
     if (editButton) {
-      const category = await fetch(API).then((r) => r.json());
+      const category = await authFetch(API).then((r) => r.json());
       const item = category.items.find((i) => i.id === Number(editButton.dataset.edit));
       enterEditMode(item);
       return;
@@ -132,7 +132,7 @@ function initCategoryPanel(slug, panelEl) {
     const deleteButton = e.target.closest("[data-delete]");
     if (deleteButton) {
       if (!confirm("Yakin mau hapus item ini?")) return;
-      await fetch(`${API_CATEGORIES}/items/${deleteButton.dataset.delete}`, { method: "DELETE" });
+      await authFetch(`${API_CATEGORIES}/items/${deleteButton.dataset.delete}`, { method: "DELETE" });
       if (editingId === Number(deleteButton.dataset.delete)) exitEditMode();
       load();
     }

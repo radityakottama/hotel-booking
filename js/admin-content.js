@@ -1,7 +1,7 @@
 /**
  * admin-content.js
  * Panel "Beranda" di shell admin (admin/index.html) -- bicara ke backend
- * lewat fetch(), untuk ubah konten hero halaman utama.
+ * lewat authFetch() (lihat admin-auth.js), untuk ubah konten hero halaman utama.
  *
  * Dibungkus IIFE: panel lain di shell yang sama (admin.js, admin-category.js)
  * juga punya `$`/`API` sendiri -- tanpa pembungkus ini, deklarasi `const`
@@ -13,7 +13,7 @@
   const $ = (selector) => document.querySelector(selector);
 
   async function loadContent() {
-    const content = await fetch(API).then((r) => r.json());
+    const content = await authFetch(API).then((r) => r.json());
     $("#f-hero-title").value = content.heroTitle;
     $("#f-hero-subtitle").value = content.heroSubtitle;
   }
@@ -26,7 +26,7 @@
       heroSubtitle: $("#f-hero-subtitle").value,
     };
 
-    const response = await fetch(API, {
+    const response = await authFetch(API, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

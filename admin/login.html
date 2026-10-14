@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tirta Senja Resort – Login Admin</title>
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<div class="wrap" style="max-width: 360px; margin-top: 80px;">
+  <h1>Login Admin</h1>
+  <p class="meta">Masuk untuk kelola kamar, konten beranda, dan kategori.</p>
+
+  <form id="login-form" style="margin-top: 24px;">
+    <div class="field">
+      <label for="f-password">Password</label>
+      <div class="pw-wrap">
+        <input id="f-password" type="password" required autofocus>
+        <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Tampilkan password">👁</button>
+      </div>
+    </div>
+    <div style="margin: 24px 0;">
+      <button class="btn" type="submit">Masuk</button>
+    </div>
+    <div class="err" id="login-msg" role="alert"></div>
+  </form>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/admin-auth.js"></script>
+<script src="../js/admin-login.js"></script>
+</body>
+</html>

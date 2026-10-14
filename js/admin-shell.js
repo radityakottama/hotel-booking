@@ -18,4 +18,9 @@
       });
     });
   });
+
+  document.querySelector("#admin-logout").addEventListener("click", () => {
+    clearAdminToken(); // dari admin-auth.js
+    location.href = "login.html";
+  });
 })();

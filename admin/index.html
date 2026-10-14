@@ -19,10 +19,12 @@
     <button data-panel="spa">Spa</button>
     <button data-panel="dining">Dining</button>
     <button data-panel="experience">Experience</button>
+
+    <button id="admin-logout" style="margin-top: 24px; color: var(--bad);">Keluar</button>
   </aside>
 
   <div class="admin-content">
-    <p class="meta">Halaman ini belum ada login/proteksi apa pun -- siapa saja yang tahu alamatnya bisa ubah data. Jangan dipakai di situs publik sungguhan sebelum ditambah autentikasi.</p>
+    <p class="meta">Sesi login berlaku 24 jam. Setelah itu kamu perlu login ulang.</p>
 
     <section class="admin-panel" id="panel-rooms">
       <h1>Kelola Kamar</h1>
@@ -181,6 +183,8 @@
 </div>
 
 <script src="../js/api.js"></script>
+<script src="../js/admin-auth.js"></script>
+<script>requireAdminLogin();</script>
 <script src="../js/ui.js"></script>
 <script src="../js/admin.js"></script>
 <script src="../js/admin-content.js"></script>

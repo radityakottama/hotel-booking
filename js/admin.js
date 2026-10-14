@@ -1,8 +1,8 @@
 /**
  * admin.js
  * Panel "Kelola Kamar" di shell admin (admin/index.html) -- langsung
- * bicara ke backend lewat fetch(), pola yang sama seperti confirmBooking()
- * di app.js dulunya.
+ * bicara ke backend lewat authFetch() (pengganti fetch() biasa yang
+ * otomatis sisipkan token login -- lihat admin-auth.js).
  *
  * Dibungkus IIFE: panel lain di shell yang sama (admin-content.js,
  * admin-category.js) juga punya `$`/`API` sendiri -- tanpa pembungkus
@@ -18,7 +18,7 @@
   let editingId = null;
 
   async function loadRooms() {
-    const rooms = await fetch(API).then((r) => r.json());
+    const rooms = await authFetch(API).then((r) => r.json());
 
     $("#room-list").innerHTML = rooms
       .map(
@@ -89,7 +89,7 @@
     const url = editingId ? `${API}/${editingId}` : API;
     const method = editingId ? "PATCH" : "POST";
 
-    const response = await fetch(url, {
+    const response = await authFetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -111,7 +111,7 @@
   $("#room-list").addEventListener("click", async (e) => {
     const editButton = e.target.closest("[data-edit]");
     if (editButton) {
-      const rooms = await fetch(API).then((r) => r.json());
+      const rooms = await authFetch(API).then((r) => r.json());
       const room = rooms.find((r) => r.id === Number(editButton.dataset.edit));
       enterEditMode(room);
       return;
@@ -120,7 +120,7 @@
     const deleteButton = e.target.closest("[data-delete]");
     if (deleteButton) {
       if (!confirm("Yakin mau hapus kamar ini?")) return;
-      await fetch(`${API}/${deleteButton.dataset.delete}`, { method: "DELETE" });
+      await authFetch(`${API}/${deleteButton.dataset.delete}`, { method: "DELETE" });
       if (editingId === Number(deleteButton.dataset.delete)) exitEditMode();
       loadRooms();
     }

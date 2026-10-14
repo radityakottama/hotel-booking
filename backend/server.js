@@ -1,3 +1,13 @@
+// Baca rahasia (ADMIN_PASSWORD) dari file backend/.env ke process.env.
+// Fitur bawaan Node.js 21.7+, tanpa library tambahan. File .env tidak
+// ikut di-commit (lihat .gitignore); contohnya di .env.example.
+try {
+  process.loadEnvFile(".env");
+} catch {
+  // Belum ada .env -- server tetap jalan, tapi login admin akan
+  // menolak semua percobaan sampai file-nya dibuat dan diisi.
+}
+
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -6,12 +16,21 @@ const PORT = 3000;
 const Room = require("./models/Room.js");
 const Content = require("./models/Content.js");
 const Category = require("./models/Category.js");
+const Auth = require("./auth.js");
 
 app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Halo dari dapur!");
+});
+
+// Login admin: 1 password (dari backend/.env), balas token kalau cocok.
+// Dipakai admin/login.html -- lihat backend/auth.js untuk detailnya.
+app.post("/api/login", (req, res) => {
+  const result = Auth.login(req.body?.password);
+  if (result.error) return res.status(401).json({ error: result.error });
+  res.json({ token: result.token });
 });
 
 // Daftar kamar sebagai KONTEN (harga, tipe, foto/perks) -- bukan
@@ -22,7 +41,7 @@ app.get("/api/rooms", (req, res) => {
   res.json(Room.findAll());
 });
 
-app.post("/api/rooms", (req, res) => {
+app.post("/api/rooms", Auth.requireAuth, (req, res) => {
   const { name, type, cap, bed, size, price, available, perks, hills, valley } = req.body;
 
   // Semua kolom ini NOT NULL di database (lihat db.js) -- kalau salah satu
@@ -43,7 +62,7 @@ app.post("/api/rooms", (req, res) => {
   res.status(201).json(room);
 });
 
-app.patch("/api/rooms/:id", (req, res) => {
+app.patch("/api/rooms/:id", Auth.requireAuth, (req, res) => {
   const room = Room.findById(req.params.id);
   if (!room) return res.status(404).json({ error: "Kamar tidak ditemukan." });
 
@@ -51,7 +70,7 @@ app.patch("/api/rooms/:id", (req, res) => {
   res.json(updated);
 });
 
-app.delete("/api/rooms/:id", (req, res) => {
+app.delete("/api/rooms/:id", Auth.requireAuth, (req, res) => {
   const deleted = Room.remove(req.params.id);
   if (!deleted) return res.status(404).json({ error: "Kamar tidak ditemukan." });
   res.status(204).send();
@@ -63,7 +82,7 @@ app.get("/api/content", (req, res) => {
   res.json(Content.get());
 });
 
-app.patch("/api/content", (req, res) => {
+app.patch("/api/content", Auth.requireAuth, (req, res) => {
   res.json(Content.update(req.body));
 });
 
@@ -80,7 +99,7 @@ app.get("/api/categories/:slug", (req, res) => {
   res.json(category);
 });
 
-app.patch("/api/categories/:slug", (req, res) => {
+app.patch("/api/categories/:slug", Auth.requireAuth, (req, res) => {
   const category = Category.findBySlug(req.params.slug);
   if (!category) return res.status(404).json({ error: "Kategori tidak ditemukan." });
 
@@ -90,7 +109,7 @@ app.patch("/api/categories/:slug", (req, res) => {
   res.json(Category.updateTitle(req.params.slug, title));
 });
 
-app.post("/api/categories/:slug/items", (req, res) => {
+app.post("/api/categories/:slug/items", Auth.requireAuth, (req, res) => {
   const category = Category.findBySlug(req.params.slug);
   if (!category) return res.status(404).json({ error: "Kategori tidak ditemukan." });
 
@@ -103,11 +122,11 @@ app.post("/api/categories/:slug/items", (req, res) => {
   res.status(201).json(item);
 });
 
-app.patch("/api/categories/items/:id", (req, res) => {
+app.patch("/api/categories/items/:id", Auth.requireAuth, (req, res) => {
   res.json(Category.updateItem(req.params.id, req.body));
 });
 
-app.delete("/api/categories/items/:id", (req, res) => {
+app.delete("/api/categories/items/:id", Auth.requireAuth, (req, res) => {
   const deleted = Category.removeItem(req.params.id);
   if (!deleted) return res.status(404).json({ error: "Item tidak ditemukan." });
   res.status(204).send();

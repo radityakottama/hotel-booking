@@ -11,6 +11,7 @@ Demo website hotel berbahasa Indonesia untuk **hotel fiktif** di Ubud, Bali. Dib
 - Tombol "Pesan" meredirect ke booking engine eksternal, membawa tanggal/jumlah tamu yang sudah dipilih lewat query string.
 - Halaman Dining/Spa/Experience: kontennya (judul & tiap item) diambil dari database, bisa diedit lewat admin.
 - **Admin Panel**: satu shell dengan sidebar (`admin/index.html`) -- kelola kamar, teks hero beranda, dan konten Spa/Dining/Experience (CRUD penuh per item), semua di satu halaman tanpa reload saat pindah menu.
+- **Login admin**: `admin/index.html` diproteksi password (1 admin, bukan sistem banyak user) -- lihat bagian "Autentikasi admin" di bawah.
 - Responsif, mendukung mode gelap, dan menghormati pengaturan "kurangi gerakan".
 - Ilustrasi kamar berupa SVG, tanpa gambar eksternal.
 
@@ -31,6 +32,17 @@ Booking engine eksternal (CONFIG.BOOKING_ENGINE_URL)
 
 `CONFIG.BOOKING_ENGINE_URL` di [js/data.js](js/data.js) saat ini **placeholder demo**. Untuk integrasi sungguhan, ganti dengan URL yang diberikan provider booking engine (biasanya sudah termasuk kode properti hotel kamu), lalu sesuaikan nama parameter query di `goToBookingEngine()` ([js/app.js](js/app.js)) kalau provider-nya pakai nama parameter berbeda.
 
+## Autentikasi admin
+
+`admin/index.html` (dan semua endpoint yang MENGUBAH data: POST/PATCH/DELETE) diproteksi lewat 1 password admin -- bukan sistem banyak user/akun, cukup untuk demo dengan satu pengelola. Endpoint GET (dibaca situs publik) tetap terbuka tanpa login.
+
+Cara setup:
+1. Copy `backend/.env.example` jadi `backend/.env`, isi `ADMIN_PASSWORD` bebas.
+2. Jalankan backend (`npm run dev`), buka `admin/login.html`, masuk pakai password itu.
+3. Setelah login, token disimpan di `localStorage` browser (`js/admin-auth.js`) dan dikirim lewat header `Authorization: Bearer <token>` di tiap request admin (`authFetch()`). Sesi berlaku 24 jam, lalu harus login ulang. Tombol "Keluar" di sidebar menghapus token kapan saja.
+
+Token disimpan di MEMORI server ([backend/auth.js](backend/auth.js)), bukan database -- restart backend otomatis logout semua orang. Ini pola yang proporsional untuk demo, bukan setara sistem auth production (tidak ada hashing password, rate limiting percobaan login, dll).
+
 ## Menjalankan
 
 Proyek ini punya dua bagian yang jalan terpisah: **frontend** (statis, root folder) dan **backend** (API, folder `backend/`).
@@ -47,6 +59,7 @@ npm start
 ```bash
 cd backend
 npm install   # sekali saja, pertama kali
+cp .env.example .env   # lalu isi ADMIN_PASSWORD -- lihat "Autentikasi admin" di bawah
 npm run dev
 # API jalan di http://localhost:3000
 ```
@@ -64,24 +77,30 @@ tirta-senja-booking/
 ├── index.html            Kerangka halaman (etalase)
 ├── category.html         Satu halaman untuk Dining/Spa/Experience (?slug=...)
 ├── admin/
-│   └── index.html         Shell admin: sidebar + panel Kamar/Beranda/Spa/Dining/Experience
+│   ├── login.html          Form login admin
+│   └── index.html          Shell admin: sidebar + panel Kamar/Beranda/Spa/Dining/Experience
 ├── css/
 │   └── styles.css        Semua gaya, termasuk layout sidebar admin (.admin-shell dkk)
 ├── js/
-│   ├── data.js            Konstanta aplikasi, termasuk CONFIG.BOOKING_ENGINE_URL
-│   ├── booking.js         Logika murni: validasi tanggal (dipakai browser & backend)
-│   ├── ui.js               Fungsi pembuat HTML (kartu kamar, kartu konten, dll.)
-│   ├── app.js              State, event listener, redirect ke booking engine
-│   ├── nav.js              Bangun link menu header dari GET /api/categories
-│   ├── page-category.js    Render satu halaman kategori berdasar ?slug=
-│   ├── admin.js             Panel "Kelola Kamar" di shell admin
-│   ├── admin-content.js     Panel "Beranda" di shell admin
-│   ├── admin-category.js    Panel Spa/Dining/Experience (1 controller dipakai 3x)
-│   └── admin-shell.js       Logika sidebar: tampilkan/sembunyikan panel
+│   ├── api.js              Alamat & path API (API_BASE, API_ROOMS, dkk) -- satu sumber kebenaran
+│   ├── data.js              Konstanta aplikasi, termasuk CONFIG.BOOKING_ENGINE_URL
+│   ├── booking.js           Logika murni: validasi tanggal (dipakai browser & backend)
+│   ├── ui.js                 Fungsi pembuat HTML (kartu kamar, kartu konten, dll.)
+│   ├── app.js                State, event listener, redirect ke booking engine
+│   ├── nav.js                Bangun link menu header dari GET /api/categories
+│   ├── page-category.js      Render satu halaman kategori berdasar ?slug=
+│   ├── admin-auth.js         Token login (localStorage) + authFetch() pengganti fetch()
+│   ├── admin-login.js        Logika form admin/login.html
+│   ├── admin.js               Panel "Kelola Kamar" di shell admin
+│   ├── admin-content.js       Panel "Beranda" di shell admin
+│   ├── admin-category.js      Panel Spa/Dining/Experience (1 controller dipakai 3x)
+│   └── admin-shell.js         Logika sidebar: tampil/sembunyi panel + tombol "Keluar"
 ├── tests/
 │   └── booking.test.js   Uji unit untuk logika di booking.js
 └── backend/               Server API (Node.js + Express), lihat package.json sendiri di sini
-    ├── server.js           Semua route: /api/rooms, /api/content, /api/categories
+    ├── server.js           Semua route: /api/login, /api/rooms, /api/content, /api/categories
+    ├── auth.js             Login admin: cek password, kelola token sesi (in-memory)
+    ├── .env.example        Contoh isi .env (ADMIN_PASSWORD)
     ├── models/
     │   ├── Room.js          Query SQL kamar (konten marketing, bukan stok real-time)
     │   ├── Content.js       Query SQL konten hero (title/subtitle)
@@ -132,7 +151,7 @@ klik "Pesan" → goToBookingEngine (bangun query string) → redirect ke CONFIG.
 - Halaman detail kamar dengan galeri foto.
 - CMS diperluas lagi: upload gambar (saat ini URL teks), promo banner, artikel/blog.
 - Integrasi booking engine sungguhan (D-EDGE, SiteMinder, dll) menggantikan `CONFIG.BOOKING_ENGINE_URL` placeholder.
-- Autentikasi untuk `admin/` (saat ini siapa pun yang tahu alamatnya bisa ubah kamar/konten).
+- Autentikasi admin yang lebih serius: hashing password, rate limiting percobaan login, token tersimpan di database (bukan memori) supaya tidak hilang saat restart.
 - Tes antarmuka otomatis dengan Playwright.
 - Sistem multi-tema (bukan cuma multi-konten) kalau situs ini dipakai untuk beberapa hotel dengan layout/struktur halaman yang benar-benar berbeda (bukan cuma warna/konten beda), mirip pola tema WordPress atau page builder.
 
