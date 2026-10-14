@@ -16,6 +16,8 @@
   await window.partialsReady; // tunggu header (dan partial lain nanti) selesai dimuat sebelum mencari elemen apa pun
 
   const $ = (selector) => document.querySelector(selector);
+  const dialog = $("#confirm-dlg");
+  const dialogBody = $("#confirm-dlg-content");
 
   const today = Booking.toLocalISO(new Date());
   const inDays = (n) => Booking.toLocalISO(new Date(Date.now() + n * 86400000));
@@ -27,6 +29,14 @@
     const date = new Date(`${iso}T00:00:00Z`);
     date.setUTCDate(date.getUTCDate() + n);
     return date.toISOString().slice(0, 10);
+  }
+
+  /** Jumlah malam antara dua tanggal "YYYY-MM-DD" -- dibaca sebagai UTC,
+   *  sama alasannya seperti addDays di atas. */
+  function nightsBetween(checkIn, checkOut) {
+    const a = Date.parse(`${checkIn}T00:00:00Z`);
+    const b = Date.parse(`${checkOut}T00:00:00Z`);
+    return Math.round((b - a) / 86400000);
   }
 
   /** Check-out minimal sehari setelah check-in (tidak boleh sama/duluan).
@@ -111,6 +121,24 @@
     window.location.href = `${CONFIG.BOOKING_ENGINE_URL}?${params}`;
   }
 
+  /** Popup konfirmasi sebelum redirect -- tamu cek dulu tanggal/jumlah
+   *  tamu/kamar yang sudah dipilih, baru "Lanjutkan" memanggil goToBookingEngine. */
+  function openConfirm(room) {
+    dialogBody.innerHTML = UI.confirmBooking(room, {
+      checkIn: state.checkIn,
+      checkOut: state.checkOut,
+      nights: nightsBetween(state.checkIn, state.checkOut),
+      adults: state.adults,
+      rooms: state.rooms,
+    });
+    dialog.showModal();
+    $("#confirm-cancel").onclick = () => dialog.close();
+    $("#confirm-proceed").onclick = () => {
+      dialog.close();
+      goToBookingEngine(room);
+    };
+  }
+
   // ---------- Event listeners ----------
 
   $("#chips").addEventListener("click", (e) => {
@@ -143,7 +171,7 @@
   $("#grid").addEventListener("click", (e) => {
     const button = e.target.closest("button[data-room]");
     if (!button) return;
-    goToBookingEngine(ROOMS.find((r) => r.id === Number(button.dataset.room)));
+    openConfirm(ROOMS.find((r) => r.id === Number(button.dataset.room)));
   });
 
   $("#ci").addEventListener("change", syncCheckoutMin);

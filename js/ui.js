@@ -78,5 +78,25 @@ const UI = (() => {
     return `<div class="empty">${message}</div>`;
   }
 
-  return { rupiah, formatDate, escapeHtml, filterChips, roomCard, contentCard, emptyState };
+  /** Isi popup konfirmasi sebelum tamu diarahkan ke booking engine --
+   *  supaya tamu bisa cek dulu tanggal/jumlah tamu/kamar yang sudah
+   *  dipilih, bukan langsung redirect begitu klik "Pesan". */
+  function confirmBooking(room, { checkIn, checkOut, nights, adults, rooms }) {
+    return `<h2>Konfirmasi Pesanan</h2>
+      <div class="meta">${escapeHtml(room.name)} — ${escapeHtml(room.type)}</div>
+      <div class="confirm-rows">
+        <div><span>Check-in</span><span>${formatDate(checkIn)}</span></div>
+        <div><span>Check-out</span><span>${formatDate(checkOut)}</span></div>
+        <div><span>Lama menginap</span><span>${nights} malam</span></div>
+        <div><span>Tamu dewasa</span><span>${adults} orang</span></div>
+        <div><span>Jumlah kamar</span><span>${rooms} kamar</span></div>
+      </div>
+      <p class="meta">Anda akan diarahkan ke halaman booking engine untuk menyelesaikan pemesanan.</p>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn sec" id="confirm-cancel">Batal</button>
+        <button class="btn" id="confirm-proceed">Lanjutkan</button>
+      </div>`;
+  }
+
+  return { rupiah, formatDate, escapeHtml, filterChips, roomCard, contentCard, emptyState, confirmBooking };
 })();
