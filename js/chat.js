@@ -35,7 +35,14 @@
       <button class="btn" type="submit">Kirim</button>
     </form>`;
 
-  document.body.append(toggle, panel);
+  // Satu pembungkus "fixed" untuk tombol + panel -- posisi panel relatif
+  // terhadap tombol diatur CSS (flex column-reverse di .chat-widget),
+  // bukan dihitung manual di sini.
+  const widget = document.createElement("div");
+  widget.className = "chat-widget";
+  widget.append(toggle, panel);
+
+  document.body.append(widget);
 
   const log = panel.querySelector(".chat-log");
   const form = panel.querySelector(".chat-form");
