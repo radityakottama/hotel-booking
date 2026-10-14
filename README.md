@@ -15,6 +15,7 @@ Demo website pemesanan hotel berbahasa Indonesia untuk **hotel fiktif** di Ubud,
 - Kode pesanan otomatis dan halaman "Pesanan saya" (riwayat disimpan di browser lewat `localStorage`).
 - Responsif, mendukung mode gelap, dan menghormati pengaturan "kurangi gerakan".
 - Ilustrasi kamar berupa SVG, tanpa gambar eksternal.
+- **Live Chat AI**: tombol chat di pojok kanan bawah untuk bertanya ke resepsionis virtual (Claude), yang menjawab berdasarkan data kamar di database.
 
 ## Menjalankan
 
@@ -36,7 +37,9 @@ npm run dev
 # API jalan di http://localhost:3000
 ```
 
-Menjalankan pengujian frontend (butuh Node.js 18+):
+**Live Chat AI** (opsional) butuh API key Claude. Salin `backend/.env.example` jadi `backend/.env`, lalu isi `ANTHROPIC_API_KEY` dengan key dari [Claude Console](https://platform.claude.com/settings/keys). File `.env` tidak ikut di-commit. Tanpa key, situs tetap jalan dan chat hanya menampilkan pesan "belum dikonfigurasi".
+
+Menjalankan pengujian (butuh Node.js 22+, dan `npm install` di folder `backend/` sekali karena tes chat memakai dependensi backend):
 
 ```bash
 npm test
@@ -55,11 +58,15 @@ tirta-senja-booking/
 │   │                     (dipakai dua arah: browser DAN backend/server.js)
 │   ├── storage.js        Simpan dan baca riwayat pesanan (localStorage)
 │   ├── ui.js             Fungsi pembuat HTML (kartu kamar, form, konfirmasi)
-│   └── app.js            State, event listener, ambil data lewat fetch() ke backend
+│   ├── app.js            State, event listener, ambil data lewat fetch() ke backend
+│   └── chat.js           Widget Live Chat AI (berdiri sendiri, kirim riwayat ke /api/chat)
 ├── tests/
-│   └── booking.test.js   Uji unit untuk logika di booking.js
+│   ├── booking.test.js   Uji unit untuk logika di booking.js
+│   └── chat.test.js      Uji validasi riwayat chat dan isi instruksi untuk Claude
 └── backend/               Server API (Node.js + Express), lihat package.json sendiri di sini
-    ├── server.js          Route GET /api/rooms dan POST /api/bookings
+    ├── server.js          Route kamar, pesanan, dan POST /api/chat
+    ├── chat.js            Live Chat AI: instruksi untuk Claude, validasi riwayat, panggil Claude API
+    ├── .env.example       Contoh isi .env (ANTHROPIC_API_KEY)
     └── data/
         └── rooms.js        Data kamar sungguhan (sumber kebenaran, bukan lagi js/data.js)
 ```
