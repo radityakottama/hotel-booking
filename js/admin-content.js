@@ -9,7 +9,7 @@
  * digabung di satu halaman.
  */
 (() => {
-  const API = "http://localhost:3000/api/content";
+  const API = API_CONTENT;
   const $ = (selector) => document.querySelector(selector);
 
   async function loadContent() {

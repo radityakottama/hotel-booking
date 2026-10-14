@@ -8,7 +8,7 @@
  * sama seperti listener #menuBtn di partials.js.
  */
 window.partialsReady.then(async () => {
-  const categories = await fetch("http://localhost:3000/api/categories").then((r) => r.json());
+  const categories = await fetch(API_CATEGORIES).then((r) => r.json());
   const categoryLinks = categories
     .map((category) => `<a href="category.html?slug=${category.slug}" class="navlink">${category.title}</a>`)
     .join("");

@@ -64,7 +64,7 @@
   let ROOMS = [];
 
   async function loadRooms() {
-    ROOMS = await fetch("http://localhost:3000/api/rooms").then((r) => r.json());
+    ROOMS = await fetch(API_ROOMS).then((r) => r.json());
   }
 
   /** Isi teks hero dari CMS (admin/index.html, panel "Beranda"). Kalau server/API gagal
@@ -72,7 +72,7 @@
    *  situs tidak boleh rusak cuma karena backend sedang mati. */
   async function loadContent() {
     try {
-      const content = await fetch("http://localhost:3000/api/content").then((r) => r.json());
+      const content = await fetch(API_CONTENT).then((r) => r.json());
       if (content.heroTitle) $("#hero-title").textContent = content.heroTitle;
       if (content.heroSubtitle) $("#hero-subtitle").textContent = content.heroSubtitle;
     } catch {

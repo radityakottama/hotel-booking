@@ -13,7 +13,7 @@
  *  di data-categories.js, sekarang datanya di database (bisa diedit lewat
  *  admin/index.html panel Spa/Dining/Experience). */
 async function fetchCategory(slug) {
-  const response = await fetch(`http://localhost:3000/api/categories/${slug}`);
+  const response = await fetch(`${API_CATEGORIES}/${slug}`);
   return response.ok ? response.json() : null;
 }
 

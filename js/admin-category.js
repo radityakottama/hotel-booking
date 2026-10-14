@@ -11,7 +11,7 @@
  * yang SAMA, dan `id` wajib unik se-halaman.
  */
 function initCategoryPanel(slug, panelEl) {
-  const API = `http://localhost:3000/api/categories/${slug}`;
+  const API = `${API_CATEGORIES}/${slug}`;
   const $ = (selector) => panelEl.querySelector(selector);
 
   const heading = $(".cat-heading");
@@ -98,7 +98,7 @@ function initCategoryPanel(slug, panelEl) {
 
     // Edit mode -> PATCH ke item yang sedang diedit. Mode tambah -> POST
     // bikin item baru. Sama polanya seperti admin.js.
-    const url = editingId ? `http://localhost:3000/api/categories/items/${editingId}` : `${API}/items`;
+    const url = editingId ? `${API_CATEGORIES}/items/${editingId}` : `${API}/items`;
     const method = editingId ? "PATCH" : "POST";
 
     const response = await fetch(url, {
@@ -132,7 +132,7 @@ function initCategoryPanel(slug, panelEl) {
     const deleteButton = e.target.closest("[data-delete]");
     if (deleteButton) {
       if (!confirm("Yakin mau hapus item ini?")) return;
-      await fetch(`http://localhost:3000/api/categories/items/${deleteButton.dataset.delete}`, { method: "DELETE" });
+      await fetch(`${API_CATEGORIES}/items/${deleteButton.dataset.delete}`, { method: "DELETE" });
       if (editingId === Number(deleteButton.dataset.delete)) exitEditMode();
       load();
     }

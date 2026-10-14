@@ -10,7 +10,7 @@
  * (SyntaxError) begitu digabung di satu halaman.
  */
 (() => {
-  const API = "http://localhost:3000/api/rooms";
+  const API = API_ROOMS;
   const $ = (selector) => document.querySelector(selector);
 
   // null = form lagi dipakai buat TAMBAH kamar baru.
