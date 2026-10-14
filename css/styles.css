@@ -182,6 +182,12 @@ footer { text-align: center; color: var(--mut); font-size: 13px; padding: 20px 0
 #ctrl-compass { font-size: 13px; font-weight: 700; position: relative; cursor: default; }
 #compass-needle { width: 18px; height: 18px; transition: transform .1s linear; }
 
+/* ---------- Admin ---------- */
+.admin-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+
 #menuBtn { display: none; }
 @media (max-width: 768px) {
   #menuBtn { display: block; }
