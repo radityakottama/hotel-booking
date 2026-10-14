@@ -1,3 +1,13 @@
+// Baca rahasia (misalnya ANTHROPIC_API_KEY) dari file backend/.env ke
+// process.env. Fitur bawaan Node.js 21.7+, tanpa library tambahan.
+// File .env tidak ikut di-commit (lihat .gitignore); contohnya di .env.example.
+try {
+  process.loadEnvFile(".env");
+} catch {
+  // Belum ada .env -- tidak apa-apa, server tetap jalan, cuma Live Chat
+  // yang akan menjawab "belum dikonfigurasi".
+}
+
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -6,6 +16,7 @@ const PORT = 3000;
 const db = require("./db.js");
 const Room = require("./models/Room.js");
 const BookingModel = require("./models/Booking.js");
+const Chat = require("./chat.js");
 const Booking = require("../js/booking.js"); // logika murni (hitung harga, validasi) -- beda dari BookingModel (urusan database)
 
 app.use(cors());
@@ -95,6 +106,37 @@ app.post("/api/bookings", (req, res) => {
     name: guest.name.trim(),
     total: price.total,
   });
+});
+
+// Live Chat AI: browser mengirim SELURUH riwayat chat setiap kali
+// ({ messages: [{ role: "user" | "assistant", content: "..." }, ...] }),
+// karena Claude API tidak mengingat percakapan sebelumnya sendiri.
+app.post("/api/chat", async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: "Live chat belum dikonfigurasi (ANTHROPIC_API_KEY belum diisi di backend/.env)." });
+  }
+
+  const { error, messages } = Chat.cleanHistory(req.body?.messages);
+  if (error) return res.status(400).json({ error });
+
+  try {
+    const text = await Chat.reply(Room.findAll(), messages);
+    res.json({ reply: text });
+  } catch (err) {
+    // Kelas error dari SDK dicek satu per satu, dari yang paling spesifik.
+    if (err instanceof Chat.Anthropic.AuthenticationError) {
+      console.error("API key Anthropic salah atau sudah tidak berlaku.");
+      return res.status(503).json({ error: "Live chat belum dikonfigurasi dengan benar." });
+    }
+    if (err instanceof Chat.Anthropic.RateLimitError) {
+      return res.status(429).json({ error: "Sedang banyak pertanyaan, coba lagi sebentar lagi." });
+    }
+    if (err instanceof Chat.Anthropic.APIError) {
+      console.error(`Claude API error ${err.status}:`, err.message);
+      return res.status(502).json({ error: "Resepsionis virtual sedang tidak bisa dihubungi." });
+    }
+    throw err; // bukan dari Claude API -- biar ditangani middleware di bawah
+  }
 });
 
 // Error-handling middleware -- Express mengenalinya KHUSUS karena punya 4
