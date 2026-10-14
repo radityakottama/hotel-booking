@@ -7,12 +7,13 @@
 const db = require("../db.js");
 
 /** Ubah baris database (kolom "available", perks berupa teks) jadi bentuk
- *  yang dipahami kode lama (booking.js, ui.js) yang pakai nama "left" dan
- *  perks sebagai array -- supaya kode itu TIDAK perlu diubah sama sekali.
+ *  yang dipahami kode lama (ui.js) yang pakai nama "left" dan perks
+ *  sebagai array -- supaya kode itu TIDAK perlu diubah sama sekali.
  *
- *  Catatan: kolom "available" sekarang berarti JUMLAH UNIT kamar tipe ini
- *  (tetap, tidak berkurang saat dipesan). Sisa kamar untuk tanggal
- *  tertentu dihitung terpisah di server.js lewat Booking.roomsLeft. */
+ *  Catatan: ketersediaan kamar real-time BUKAN lagi tanggung jawab situs
+ *  ini -- itu urusan booking engine eksternal (lihat CONFIG.BOOKING_ENGINE_URL
+ *  di js/data.js). "left" di sini cuma jumlah unit kamar tipe ini sebagai
+ *  info konten, bukan stok yang berkurang saat dipesan. */
 function toRoom(row) {
   return { ...row, left: row.available, perks: JSON.parse(row.perks) };
 }

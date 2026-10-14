@@ -3,10 +3,9 @@ const cors = require("cors");
 const app = express();
 const PORT = 3000;
 
-const db = require("./db.js");
 const Room = require("./models/Room.js");
-const BookingModel = require("./models/Booking.js");
-const Booking = require("../js/booking.js"); // logika murni (hitung harga, validasi) -- beda dari BookingModel (urusan database)
+const Content = require("./models/Content.js");
+const Category = require("./models/Category.js");
 
 app.use(cors());
 app.use(express.json());
@@ -15,26 +14,12 @@ app.get("/", (req, res) => {
   res.send("Halo dari dapur!");
 });
 
-/** Isi `left` kamar dengan sisa kamar untuk rentang tanggal itu
- *  (jumlah unit dikurangi pesanan yang bentrok di malam terpenuh). */
-function withAvailability(room, checkIn, checkOut) {
-  const bookings = BookingModel.findOverlapping(room.id, checkIn, checkOut);
-  return { ...room, left: Booking.roomsLeft(room.left, bookings, checkIn, checkOut) };
-}
-
-// GET /api/rooms                         -> left = jumlah unit (dipakai Admin Panel)
-// GET /api/rooms?checkIn=...&checkOut=... -> left = sisa kamar di tanggal itu
+// Daftar kamar sebagai KONTEN (harga, tipe, foto/perks) -- bukan
+// ketersediaan real-time. Cek stok & booking sungguhan jadi tanggung
+// jawab booking engine eksternal, situs ini cuma menampilkan & meredirect
+// (lihat CONFIG.BOOKING_ENGINE_URL di js/data.js).
 app.get("/api/rooms", (req, res) => {
-  const { checkIn, checkOut } = req.query;
-  const rooms = Room.findAll();
-  if (!checkIn && !checkOut) return res.json(rooms);
-
-  // Di sini tanggal lampau tidak ditolak (pakai "" sebagai hari ini) --
-  // cuma mau tahu ketersediaan, bukan memesan.
-  const dateError = Booking.validateDates(checkIn, checkOut, "");
-  if (dateError) return res.status(400).json({ error: dateError });
-
-  res.json(rooms.map((room) => withAvailability(room, checkIn, checkOut)));
+  res.json(Room.findAll());
 });
 
 app.post("/api/rooms", (req, res) => {
@@ -72,50 +57,60 @@ app.delete("/api/rooms/:id", (req, res) => {
   res.status(204).send();
 });
 
-app.post("/api/bookings", (req, res) => {
-  const { roomId, checkIn, checkOut, roomCount, guest } = req.body;
+// Konten halaman utama (hero title/subtitle), dipakai index.html supaya
+// teksnya bisa diubah lewat admin/index.html (panel "Beranda") tanpa edit HTML langsung.
+app.get("/api/content", (req, res) => {
+  res.json(Content.get());
+});
 
-  const room = Room.findById(roomId);
-  if (!room) return res.status(404).json({ error: "Kamar tidak ditemukan." });
+app.patch("/api/content", (req, res) => {
+  res.json(Content.update(req.body));
+});
 
-  const today = Booking.toLocalISO(new Date());
-  const dateError = Booking.validateDates(checkIn, checkOut, today);
-  if (dateError) return res.status(400).json({ error: dateError });
+// Halaman kategori (Dining, Spa, Experience) -- dipakai halaman publik
+// (category.html lewat page-category.js), nav header (nav.js), dan panel
+// admin Spa/Dining/Experience.
+app.get("/api/categories", (req, res) => {
+  res.json(Category.findAll());
+});
 
-  const guestError = Booking.validateGuest(guest);
-  if (guestError) return res.status(400).json({ error: guestError });
+app.get("/api/categories/:slug", (req, res) => {
+  const category = Category.findBySlug(req.params.slug);
+  if (!category) return res.status(404).json({ error: "Kategori tidak ditemukan." });
+  res.json(category);
+});
 
-  const nights = Booking.nightsBetween(checkIn, checkOut);
-  const price = Booking.priceBreakdown(room.price, nights, roomCount, { service: 0.10, tax: 0.11 });
-  const code = Booking.generateCode("TS");
+app.patch("/api/categories/:slug", (req, res) => {
+  const category = Category.findBySlug(req.params.slug);
+  if (!category) return res.status(404).json({ error: "Kategori tidak ditemukan." });
 
-  // Cek sisa kamar DAN simpan pesanan di dalam satu transaction. Stok
-  // tidak lagi dikurangi permanen: sisa kamar dihitung ulang dari pesanan
-  // yang tanggalnya bentrok. Karena cek dan simpan terjadi di transaction
-  // yang sama, dua pesanan yang datang bersamaan tidak bisa sama-sama
-  // lolos lalu membuat kamar "minus".
-  const saveBooking = db.transaction(() => {
-    if (!Booking.canBook(withAvailability(room, checkIn, checkOut), guest.adults, roomCount)) {
-      return false;
-    }
-    BookingModel.create({
-      code, roomId: room.id, roomName: room.name, checkIn, checkOut, nights,
-      roomCount, guestName: guest.name.trim(), total: price.total,
-    });
-    return true;
-  });
-  if (!saveBooking()) {
-    return res.status(400).json({ error: "Kamar tidak muat atau sudah penuh di tanggal itu." });
+  const { title } = req.body;
+  if (!title) return res.status(400).json({ error: "Judul kategori wajib diisi." });
+
+  res.json(Category.updateTitle(req.params.slug, title));
+});
+
+app.post("/api/categories/:slug/items", (req, res) => {
+  const category = Category.findBySlug(req.params.slug);
+  if (!category) return res.status(404).json({ error: "Kategori tidak ditemukan." });
+
+  const { title, desc, image } = req.body;
+  if (!title || !desc || !image) {
+    return res.status(400).json({ error: "Judul, deskripsi, dan gambar wajib diisi." });
   }
 
-  res.json({
-    code,
-    room: room.name,
-    checkIn, checkOut, nights,
-    rooms: roomCount,
-    name: guest.name.trim(),
-    total: price.total,
-  });
+  const item = Category.createItem(req.params.slug, req.body);
+  res.status(201).json(item);
+});
+
+app.patch("/api/categories/items/:id", (req, res) => {
+  res.json(Category.updateItem(req.params.id, req.body));
+});
+
+app.delete("/api/categories/items/:id", (req, res) => {
+  const deleted = Category.removeItem(req.params.id);
+  if (!deleted) return res.status(404).json({ error: "Item tidak ditemukan." });
+  res.status(204).send();
 });
 
 // Error-handling middleware -- Express mengenalinya KHUSUS karena punya 4

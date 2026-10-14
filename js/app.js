@@ -4,15 +4,18 @@
  * dan menghubungkan logika (booking.js) dengan tampilan (ui.js).
  *
  * Urutan baca yang disarankan untuk belajar:
- *   data.js -> booking.js -> storage.js -> ui.js -> app.js
+ *   data.js -> booking.js -> ui.js -> app.js
+ *
+ * Catatan arsitektur: situs ini CUMA etalase (lihat kamar, cari tanggal).
+ * Proses booking & pembayaran sungguhan terjadi di booking engine
+ * eksternal -- tombol "Pesan" meredirect ke sana (goToBookingEngine di
+ * bawah), bukan membuat pesanan di backend kita sendiri.
  */
 
 (async () => {
   await window.partialsReady; // tunggu header (dan partial lain nanti) selesai dimuat sebelum mencari elemen apa pun
 
   const $ = (selector) => document.querySelector(selector);
-  const dialog = $("#dlg");
-  const dialogBody = $("#dgc");
 
   const today = Booking.toLocalISO(new Date());
   const inDays = (n) => Booking.toLocalISO(new Date(Date.now() + n * 86400000));
@@ -27,14 +30,25 @@
     rooms: 1,
   };
 
-  // Data kamar dari server. "left" di tiap kamar = sisa kamar untuk
-  // tanggal state.checkIn-checkOut, jadi harus diambil ulang setiap kali
-  // tanggal berubah (dan setelah memesan, karena sisanya berkurang).
+  // Data kamar dari server -- konten (nama, harga, foto/perks), bukan
+  // ketersediaan real-time (itu urusan booking engine).
   let ROOMS = [];
 
   async function loadRooms() {
-    const params = new URLSearchParams({ checkIn: state.checkIn, checkOut: state.checkOut });
-    ROOMS = await fetch(`http://localhost:3000/api/rooms?${params}`).then((r) => r.json());
+    ROOMS = await fetch("http://localhost:3000/api/rooms").then((r) => r.json());
+  }
+
+  /** Isi teks hero dari CMS (admin/index.html, panel "Beranda"). Kalau server/API gagal
+   *  dihubungi, teks default yang sudah ada di index.html tetap tampil --
+   *  situs tidak boleh rusak cuma karena backend sedang mati. */
+  async function loadContent() {
+    try {
+      const content = await fetch("http://localhost:3000/api/content").then((r) => r.json());
+      if (content.heroTitle) $("#hero-title").textContent = content.heroTitle;
+      if (content.heroSubtitle) $("#hero-subtitle").textContent = content.heroSubtitle;
+    } catch {
+      // Biarkan teks default di HTML yang tampil.
+    }
   }
 
   // ---------- Render ----------
@@ -53,73 +67,30 @@
   }
 
   function renderRooms() {
-    const nights = Booking.nightsBetween(state.checkIn, state.checkOut);
     const visible = ROOMS.filter((r) => state.type === "Semua" || r.type === state.type);
 
     $("#grid").innerHTML = visible.length
-      ? sortRooms(visible)
-          .map((room) =>
-            UI.roomCard(room, {
-              nights,
-              roomCount: state.rooms,
-              bookable: Booking.canBook(room, state.adults, state.rooms),
-            }))
-          .join("")
+      ? sortRooms(visible).map((room) => UI.roomCard(room)).join("")
       : UI.emptyState("Tidak ada kamar untuk filter ini. Pilih tipe lain.");
   }
 
-  // ---------- Dialog ----------
+  // ---------- Booking engine ----------
 
-  function showDialog(html) {
-    dialogBody.innerHTML = html;
-    if (!dialog.open) dialog.showModal();
-  }
-
-  function openBookingForm(room) {
-    const nights = Booking.nightsBetween(state.checkIn, state.checkOut);
-    const price = Booking.priceBreakdown(room.price, nights, state.rooms, {
-      service: CONFIG.SERVICE_RATE,
-      tax: CONFIG.TAX_RATE,
+  /** Redirect ke booking engine eksternal, mengikuti pola nyata yang
+   *  dipakai hotel (contoh: elisonhotel.com -> secure-hotel-booking.com/d-edge/...).
+   *  Parameter tanggal & jumlah tamu "dititipkan" lewat query string supaya
+   *  tamu tidak perlu input ulang di halaman booking engine. */
+  function goToBookingEngine(room) {
+    const params = new URLSearchParams({
+      arrivalDate: state.checkIn,
+      departureDate: state.checkOut,
+      selectedAdultCount: state.adults,
+      currency: "IDR",
+      promoCode: "",
+      roomType: room.type,
     });
-    showDialog(UI.bookingForm(room, state, nights, price));
-    $("#guest-name").focus();
-    $("#btn-cancel").onclick = () => dialog.close();
-    $("#btn-confirm").onclick = () => confirmBooking(room, nights, price);
+    window.location.href = `${CONFIG.BOOKING_ENGINE_URL}?${params}`;
   }
-
-  async function confirmBooking(room, nights, price) {
-  const guest = {
-    name: $("#guest-name").value,
-    email: $("#guest-email").value,
-    phone: $("#guest-phone").value,
-    adults: state.adults,
-  };
-
-  const response = await fetch("http://localhost:3000/api/bookings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      roomId: room.id,
-      checkIn: state.checkIn,
-      checkOut: state.checkOut,
-      roomCount: state.rooms,
-      guest,
-    }),
-  });
-  const result = await response.json();
-
-  if (!response.ok) {
-    $("#form-error").textContent = result.error;
-    return;
-  }
-
-  BookingStore.add(result);
-  showDialog(UI.confirmation(result));
-  $("#btn-close").onclick = () => dialog.close();
-
-  await loadRooms(); // sisa kamar di tanggal ini baru saja berkurang
-  renderRooms();
-}
 
   // ---------- Event listeners ----------
 
@@ -136,7 +107,7 @@
     renderRooms();
   });
 
-  $("#go").addEventListener("click", async () => {
+  $("#go").addEventListener("click", () => {
     const checkIn = $("#ci").value;
     const checkOut = $("#co").value;
     const error = Booking.validateDates(checkIn, checkOut, today);
@@ -147,20 +118,13 @@
     state.checkOut = checkOut;
     state.adults = Number($("#ad").value);
     state.rooms = Number($("#rm").value);
-    await loadRooms();
-    renderRooms();
     $("#grid").scrollIntoView({ behavior: "smooth" });
   });
 
   $("#grid").addEventListener("click", (e) => {
     const button = e.target.closest("button[data-room]");
     if (!button) return;
-    openBookingForm(ROOMS.find((r) => r.id === Number(button.dataset.room)));
-  });
-
-  $("#myBk").addEventListener("click", () => {
-    showDialog(UI.myBookings(BookingStore.load()));
-    $("#btn-close").onclick = () => dialog.close();
+    goToBookingEngine(ROOMS.find((r) => r.id === Number(button.dataset.room)));
   });
 
   // ---------- Inisialisasi ----------
@@ -172,6 +136,7 @@
     `<option ${i + 1 === state.adults ? "selected" : ""}>${i + 1}</option>`).join("");
   $("#rm").innerHTML = Array.from({ length: CONFIG.MAX_ROOMS }, (_, i) => `<option>${i + 1}</option>`).join("");
 
+  await loadContent();
   await loadRooms();
   renderChips();
   renderRooms();

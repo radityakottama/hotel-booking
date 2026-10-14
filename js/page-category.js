@@ -4,17 +4,17 @@
  * dst). Kategori mana yang ditampilkan ditentukan oleh parameter "slug"
  * di URL (contoh: category.html?slug=spa), bukan oleh nama file HTML.
  *
- * Menambah kategori baru = menambah satu entri di data-categories.js.
- * Tidak perlu bikin file HTML atau JS baru sama sekali.
+ * Menambah kategori baru = menambah satu baris di tabel "categories"
+ * (lewat admin, atau langsung di database). Tidak perlu bikin file HTML
+ * atau JS baru sama sekali.
  */
 
-/** Ditulis seolah async (menunggu), walau datanya masih lokal, supaya
- *  nanti gampang diganti jadi fetch() sungguhan ke API tanpa mengubah
- *  kode lain di file ini — cukup ganti isi fungsi ini saja. */
+/** Ambil kategori dari backend. Dulu dibaca dari objek statis CATEGORIES
+ *  di data-categories.js, sekarang datanya di database (bisa diedit lewat
+ *  admin/index.html panel Spa/Dining/Experience). */
 async function fetchCategory(slug) {
-  // Nanti kalau sudah ada backend, baris di atas diganti jadi:
-  // return fetch(`/api/categories/${slug}`).then((r) => r.json());
-  return CATEGORIES[slug] || null;
+  const response = await fetch(`http://localhost:3000/api/categories/${slug}`);
+  return response.ok ? response.json() : null;
 }
 
 (async () => {

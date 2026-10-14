@@ -5,12 +5,14 @@
  */
 
 const CONFIG = {
-  SERVICE_RATE: 0.10,        // biaya layanan 10% dari harga kamar
-  TAX_RATE: 0.11,            // pajak 11% dari (harga kamar + biaya layanan)
-  MAX_ROOMS: 3,              // maksimum kamar per pesanan
-  MAX_ADULTS: 6,             // maksimum tamu dewasa per pesanan
-  STORAGE_KEY: "ts_bookings",
-  CODE_PREFIX: "TS",
+  MAX_ROOMS: 3,              // maksimum kamar per pencarian
+  MAX_ADULTS: 6,             // maksimum tamu dewasa per pencarian
+
+  // Booking engine eksternal (pola D-EDGE dkk): tombol "Pesan" redirect
+  // ke sini, bukan buat pesanan sendiri di backend kita. Ini PLACEHOLDER
+  // demo -- ganti dengan URL booking engine sungguhan (dari provider yang
+  // dipakai hotel, lengkap dengan kode properti) saat integrasi nyata.
+  BOOKING_ENGINE_URL: "https://secure-hotel-booking.com/d-edge/redirect/DEMO/id-ID",
 };
 
 const ROOM_TYPES = ["Semua", "Standar", "Deluxe", "Suite", "Villa"];

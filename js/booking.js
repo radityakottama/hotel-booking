@@ -3,11 +3,15 @@
  * Logika bisnis murni: tidak menyentuh DOM, tidak memakai localStorage.
  * Karena "murni", semua fungsi di sini mudah diuji (lihat tests/booking.test.js)
  * dan bisa dipelajari tanpa perlu membuka browser.
+ *
+ * Catatan: dulu file ini juga berisi logika booking in-house (canBook,
+ * roomsLeft, priceBreakdown, dst) -- sekarang booking sungguhan jadi
+ * tanggung jawab booking engine eksternal (lihat CONFIG.BOOKING_ENGINE_URL
+ * di js/data.js), jadi yang tersisa cuma yang masih dipakai: validasi
+ * form pencarian tanggal.
  */
 
 const Booking = (() => {
-  const DAY_MS = 24 * 60 * 60 * 1000;
-
   /** Ubah Date ke "YYYY-MM-DD" memakai zona waktu LOKAL.
    *  (toISOString() memakai UTC, sehingga dekat tengah malam di WITA
    *  tanggalnya bisa mundur satu hari.) */
@@ -16,14 +20,6 @@ const Booking = (() => {
     const m = String(date.getMonth() + 1).padStart(2, "0");
     const d = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
-  }
-
-  /** Jumlah malam antara dua tanggal "YYYY-MM-DD".
-   *  Keduanya dibaca sebagai UTC agar pergantian jam musim panas tidak mengganggu hitungan. */
-  function nightsBetween(checkIn, checkOut) {
-    const a = Date.parse(`${checkIn}T00:00:00Z`);
-    const b = Date.parse(`${checkOut}T00:00:00Z`);
-    return Math.round((b - a) / DAY_MS);
   }
 
   /** Validasi tanggal. Mengembalikan pesan error, atau "" jika valid.
@@ -35,61 +31,7 @@ const Booking = (() => {
     return "";
   }
 
-  /** Apakah kamar ini bisa dipesan untuk jumlah tamu dan kamar tertentu?
-   *  Syarat 1: total kapasitas cukup. Syarat 2: stok kamar cukup. */
-  function canBook(room, guests, roomCount) {
-    return room.cap * roomCount >= guests && room.left >= roomCount;
-  }
-
-  /** Sisa kamar untuk rentang tanggal tertentu.
-   *  `total` = jumlah unit kamar tipe ini, `bookings` = pesanan lain untuk
-   *  kamar yang sama ({ checkIn, checkOut, roomCount }).
-   *
-   *  Dihitung PER MALAM: untuk tiap malam di rentang [checkIn, checkOut),
-   *  jumlahkan kamar yang sedang terpakai, lalu ambil malam yang paling
-   *  penuh. Kenapa tidak sekadar menjumlahkan semua pesanan yang bentrok?
-   *  Karena dua pesanan bisa sama-sama bentrok dengan rentang kita tapi
-   *  tidak di malam yang sama (misal satu tanggal 1-2, satu tanggal 3-4),
-   *  jadi menjumlahkan semuanya akan membuat kamar tampak lebih penuh
-   *  dari kenyataannya.
-   *
-   *  Malam check-out TIDAK dihitung: tamu yang check-out tanggal 5 dan
-   *  tamu yang check-in tanggal 5 tidak berebut kamar. */
-  function roomsLeft(total, bookings, checkIn, checkOut) {
-    let busiest = 0;
-    for (let t = Date.parse(`${checkIn}T00:00:00Z`); t < Date.parse(`${checkOut}T00:00:00Z`); t += DAY_MS) {
-      const night = new Date(t).toISOString().slice(0, 10); // aman: t sudah UTC
-      const used = bookings
-        .filter((b) => b.checkIn <= night && night < b.checkOut)
-        .reduce((sum, b) => sum + b.roomCount, 0);
-      busiest = Math.max(busiest, used);
-    }
-    return Math.max(0, total - busiest);
-  }
-
-  /** Rincian harga. Biaya layanan dihitung dari subtotal,
-   *  pajak dihitung dari (subtotal + biaya layanan). Semua dibulatkan ke Rupiah. */
-  function priceBreakdown(pricePerNight, nights, roomCount, rates) {
-    const subtotal = pricePerNight * nights * roomCount;
-    const service = Math.round(subtotal * rates.service);
-    const tax = Math.round((subtotal + service) * rates.tax);
-    return { subtotal, service, tax, total: subtotal + service + tax };
-  }
-
-  /** Validasi data tamu. Mengembalikan pesan error, atau "" jika valid. */
-  function validateGuest({ name, email, phone }) {
-    if (name.trim().length < 3) return "Nama minimal 3 karakter.";
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return "Format email belum benar.";
-    if (!/^[0-9+\- ]{9,15}$/.test(phone.trim())) return "No. HP harus 9–15 digit.";
-    return "";
-  }
-
-  /** Kode pesanan, contoh: TS-K3X9QA. `rand` bisa diganti saat pengujian. */
-  function generateCode(prefix, rand = Math.random) {
-    return `${prefix}-${rand().toString(36).slice(2, 8).toUpperCase()}`;
-  }
-
-  return { toLocalISO, nightsBetween, validateDates, canBook, roomsLeft, priceBreakdown, validateGuest, generateCode };
+  return { toLocalISO, validateDates };
 })();
 
 // Agar file ini bisa diuji di Node.js tanpa mengubah cara kerjanya di browser.

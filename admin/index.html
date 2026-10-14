@@ -7,44 +7,183 @@
 <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-<div class="wrap">
-  <h1>Admin Panel — Kelola Kamar</h1>
-  <p class="meta">Halaman ini belum ada login/proteksi apa pun -- siapa saja yang tahu alamatnya bisa tambah/hapus kamar. Jangan dipakai di situs publik sungguhan sebelum ditambah autentikasi.</p>
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <div class="logo">Tirta Senja<small>Admin</small></div>
 
-  <section style="margin: 24px 0;">
-    <h2>Tambah Kamar Baru</h2>
-    <form id="room-form">
-      <div class="field"><label for="f-name">Nama kamar</label><input id="f-name" required></div>
-      <div class="field">
-        <label for="f-type">Tipe</label>
-        <select id="f-type">
-          <option>Standar</option>
-          <option>Deluxe</option>
-          <option>Suite</option>
-          <option>Villa</option>
-        </select>
-      </div>
-      <div class="field"><label for="f-cap">Kapasitas tamu</label><input id="f-cap" type="number" min="1" value="2" required></div>
-      <div class="field"><label for="f-bed">Konfigurasi tempat tidur</label><input id="f-bed" required></div>
-      <div class="field"><label for="f-size">Luas (m²)</label><input id="f-size" type="number" min="1" required></div>
-      <div class="field"><label for="f-price">Harga per malam (Rp)</label><input id="f-price" type="number" min="0" required></div>
-      <div class="field"><label for="f-available">Jumlah unit kamar</label><input id="f-available" type="number" min="0" value="1" required></div>
-      <div class="field"><label for="f-perks">Fasilitas (pisahkan dengan koma)</label><input id="f-perks" placeholder="AC, Wi-Fi, Sarapan"></div>
-      <div style="margin: 24px 0; display: flex; gap: 8px;">
-        <button id="form-submit" class="btn" type="submit">Simpan Kamar</button>
-        <button id="form-cancel" class="btn sec" type="button" hidden>Batal</button>
-      </div>
-      <div class="err" id="form-msg" role="alert"></div>
-    </form>
-  </section>
+    <h3>Kamar</h3>
+    <button data-panel="rooms" aria-current="true">Kelola Kamar</button>
 
-  <section>
-    <h2>Daftar Kamar</h2>
-    <div id="room-list"></div>
-  </section>
+    <h3>Konten</h3>
+    <button data-panel="home">Beranda</button>
+    <button data-panel="spa">Spa</button>
+    <button data-panel="dining">Dining</button>
+    <button data-panel="experience">Experience</button>
+  </aside>
+
+  <div class="admin-content">
+    <p class="meta">Halaman ini belum ada login/proteksi apa pun -- siapa saja yang tahu alamatnya bisa ubah data. Jangan dipakai di situs publik sungguhan sebelum ditambah autentikasi.</p>
+
+    <section class="admin-panel" id="panel-rooms">
+      <h1>Kelola Kamar</h1>
+
+      <section style="margin: 24px 0;">
+        <h2>Tambah Kamar Baru</h2>
+        <form id="room-form">
+          <div class="field"><label for="f-name">Nama kamar</label><input id="f-name" required></div>
+          <div class="field">
+            <label for="f-type">Tipe</label>
+            <select id="f-type">
+              <option>Standar</option>
+              <option>Deluxe</option>
+              <option>Suite</option>
+              <option>Villa</option>
+            </select>
+          </div>
+          <div class="field"><label for="f-cap">Kapasitas tamu</label><input id="f-cap" type="number" min="1" value="2" required></div>
+          <div class="field"><label for="f-bed">Konfigurasi tempat tidur</label><input id="f-bed" required></div>
+          <div class="field"><label for="f-size">Luas (m²)</label><input id="f-size" type="number" min="1" required></div>
+          <div class="field"><label for="f-price">Harga per malam (Rp)</label><input id="f-price" type="number" min="0" required></div>
+          <div class="field"><label for="f-available">Jumlah unit kamar</label><input id="f-available" type="number" min="0" value="1" required></div>
+          <div class="field"><label for="f-perks">Fasilitas (pisahkan dengan koma)</label><input id="f-perks" placeholder="AC, Wi-Fi, Sarapan"></div>
+          <div style="margin: 24px 0; display: flex; gap: 8px;">
+            <button id="form-submit" class="btn" type="submit">Simpan Kamar</button>
+            <button id="form-cancel" class="btn sec" type="button" hidden>Batal</button>
+          </div>
+          <div class="err" id="form-msg" role="alert"></div>
+        </form>
+      </section>
+
+      <section>
+        <h2>Daftar Kamar</h2>
+        <div id="room-list"></div>
+      </section>
+    </section>
+
+    <section class="admin-panel" id="panel-home" hidden>
+      <h1>Beranda</h1>
+
+      <section style="margin: 24px 0;">
+        <h2>Hero Halaman Utama</h2>
+        <form id="content-form">
+          <div class="field"><label for="f-hero-title">Judul hero</label><input id="f-hero-title" required></div>
+          <div class="field"><label for="f-hero-subtitle">Subjudul hero</label><input id="f-hero-subtitle" required></div>
+          <div style="margin: 24px 0;">
+            <button class="btn" type="submit">Simpan</button>
+          </div>
+          <div class="err" id="content-form-msg" role="alert"></div>
+        </form>
+      </section>
+    </section>
+
+    <!-- Panel Spa/Dining/Experience: markup identik, cuma id panel beda --
+         semua dikendalikan oleh SATU controller (js/admin-category.js)
+         lewat initCategoryPanel(slug, panelEl), bukan 3 salinan kode. -->
+    <section class="admin-panel" id="panel-spa" hidden>
+      <h1 class="cat-heading">Spa</h1>
+
+      <section style="margin: 24px 0;">
+        <h2>Judul Halaman</h2>
+        <form class="cat-title-form">
+          <div class="field"><label>Judul</label><input class="cat-title-input" required></div>
+          <div style="margin: 24px 0;"><button class="btn" type="submit">Simpan Judul</button></div>
+        </form>
+      </section>
+
+      <section style="margin: 24px 0;">
+        <h2>Tambah / Edit Item</h2>
+        <form class="cat-item-form">
+          <div class="field"><label>Judul item</label><input class="cat-f-title" required></div>
+          <div class="field"><label>Deskripsi</label><input class="cat-f-desc" required></div>
+          <div class="field"><label>URL gambar</label><input class="cat-f-image" required></div>
+          <div class="field"><label>Urutan</label><input class="cat-f-order" type="number" value="0" min="0"></div>
+          <div class="field"><label><input class="cat-f-big" type="checkbox"> Tampilkan sebagai kartu besar</label></div>
+          <div style="margin: 24px 0; display: flex; gap: 8px;">
+            <button class="btn cat-submit" type="submit">Tambah Item</button>
+            <button class="btn sec cat-cancel" type="button" hidden>Batal</button>
+          </div>
+          <div class="err cat-item-msg" role="alert"></div>
+        </form>
+      </section>
+
+      <section>
+        <h2>Daftar Item</h2>
+        <div class="cat-item-list"></div>
+      </section>
+    </section>
+
+    <section class="admin-panel" id="panel-dining" hidden>
+      <h1 class="cat-heading">Dining</h1>
+
+      <section style="margin: 24px 0;">
+        <h2>Judul Halaman</h2>
+        <form class="cat-title-form">
+          <div class="field"><label>Judul</label><input class="cat-title-input" required></div>
+          <div style="margin: 24px 0;"><button class="btn" type="submit">Simpan Judul</button></div>
+        </form>
+      </section>
+
+      <section style="margin: 24px 0;">
+        <h2>Tambah / Edit Item</h2>
+        <form class="cat-item-form">
+          <div class="field"><label>Judul item</label><input class="cat-f-title" required></div>
+          <div class="field"><label>Deskripsi</label><input class="cat-f-desc" required></div>
+          <div class="field"><label>URL gambar</label><input class="cat-f-image" required></div>
+          <div class="field"><label>Urutan</label><input class="cat-f-order" type="number" value="0" min="0"></div>
+          <div class="field"><label><input class="cat-f-big" type="checkbox"> Tampilkan sebagai kartu besar</label></div>
+          <div style="margin: 24px 0; display: flex; gap: 8px;">
+            <button class="btn cat-submit" type="submit">Tambah Item</button>
+            <button class="btn sec cat-cancel" type="button" hidden>Batal</button>
+          </div>
+          <div class="err cat-item-msg" role="alert"></div>
+        </form>
+      </section>
+
+      <section>
+        <h2>Daftar Item</h2>
+        <div class="cat-item-list"></div>
+      </section>
+    </section>
+
+    <section class="admin-panel" id="panel-experience" hidden>
+      <h1 class="cat-heading">Experience</h1>
+
+      <section style="margin: 24px 0;">
+        <h2>Judul Halaman</h2>
+        <form class="cat-title-form">
+          <div class="field"><label>Judul</label><input class="cat-title-input" required></div>
+          <div style="margin: 24px 0;"><button class="btn" type="submit">Simpan Judul</button></div>
+        </form>
+      </section>
+
+      <section style="margin: 24px 0;">
+        <h2>Tambah / Edit Item</h2>
+        <form class="cat-item-form">
+          <div class="field"><label>Judul item</label><input class="cat-f-title" required></div>
+          <div class="field"><label>Deskripsi</label><input class="cat-f-desc" required></div>
+          <div class="field"><label>URL gambar</label><input class="cat-f-image" required></div>
+          <div class="field"><label>Urutan</label><input class="cat-f-order" type="number" value="0" min="0"></div>
+          <div class="field"><label><input class="cat-f-big" type="checkbox"> Tampilkan sebagai kartu besar</label></div>
+          <div style="margin: 24px 0; display: flex; gap: 8px;">
+            <button class="btn cat-submit" type="submit">Tambah Item</button>
+            <button class="btn sec cat-cancel" type="button" hidden>Batal</button>
+          </div>
+          <div class="err cat-item-msg" role="alert"></div>
+        </form>
+      </section>
+
+      <section>
+        <h2>Daftar Item</h2>
+        <div class="cat-item-list"></div>
+      </section>
+    </section>
+  </div>
 </div>
 
 <script src="../js/ui.js"></script>
 <script src="../js/admin.js"></script>
+<script src="../js/admin-content.js"></script>
+<script src="../js/admin-category.js"></script>
+<script src="../js/admin-shell.js"></script>
 </body>
 </html>
