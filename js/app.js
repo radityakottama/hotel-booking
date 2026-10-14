@@ -20,6 +20,25 @@
   const today = Booking.toLocalISO(new Date());
   const inDays = (n) => Booking.toLocalISO(new Date(Date.now() + n * 86400000));
 
+  /** Tambah `n` hari ke tanggal "YYYY-MM-DD", dibaca sebagai UTC supaya
+   *  pergantian jam musim panas tidak menggeser hasil (pola sama seperti
+   *  nightsBetween yang dulu ada di booking.js). */
+  function addDays(iso, n) {
+    const date = new Date(`${iso}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + n);
+    return date.toISOString().slice(0, 10);
+  }
+
+  /** Check-out minimal sehari setelah check-in (tidak boleh sama/duluan).
+   *  Dipanggil tiap kali check-in berubah, supaya input tanggal check-out
+   *  BENAR-BENAR menolak pilihan yang tidak valid, bukan cuma dicegat
+   *  belakangan lewat Booking.validateDates saat klik "Cari kamar". */
+  function syncCheckoutMin() {
+    const minCheckOut = addDays($("#ci").value, 1);
+    $("#co").min = minCheckOut;
+    if ($("#co").value < minCheckOut) $("#co").value = minCheckOut;
+  }
+
   // State aplikasi: satu objek, diubah hanya lewat event handler di bawah.
   const state = {
     type: "Semua",
@@ -127,11 +146,14 @@
     goToBookingEngine(ROOMS.find((r) => r.id === Number(button.dataset.room)));
   });
 
+  $("#ci").addEventListener("change", syncCheckoutMin);
+
   // ---------- Inisialisasi ----------
 
   $("#ci").value = state.checkIn;
   $("#ci").min = today;
   $("#co").value = state.checkOut;
+  syncCheckoutMin();
   $("#ad").innerHTML = Array.from({ length: CONFIG.MAX_ADULTS }, (_, i) =>
     `<option ${i + 1 === state.adults ? "selected" : ""}>${i + 1}</option>`).join("");
   $("#rm").innerHTML = Array.from({ length: CONFIG.MAX_ROOMS }, (_, i) => `<option>${i + 1}</option>`).join("");
